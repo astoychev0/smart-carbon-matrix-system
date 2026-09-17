@@ -1,0 +1,62 @@
+name: Project Build & Code Quality Check
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # 1. Проверка на Arduino кода (C++)
+  arduino-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Arduino CLI
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Install Core & Libraries
+        run: |
+          arduino-cli core update-index
+          arduino-cli core install arduino:avr
+          arduino-cli lib install "Adafruit NeoPixel"
+
+      - name: Compile Arduino Sketch
+        run: |
+          arduino-cli compile --fqbn arduino:avr:uno ./
+
+  # 2. Проверка на PHP синтаксиса
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Check PHP Syntax
+        run: |
+          find . -type f -name "*.php" -exec php -l {} \;
+
+  # 3. Проверка на Web кода (JS / CSS / HTML)
+  web-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Prettier
+        run: npm install -g prettier
+
+      - name: Check JS & CSS Formatting
+        run: npx prettier --check "**/*.{js,css,html}"
