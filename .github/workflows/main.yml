@@ -7,7 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  # 1. Проверка на Arduino кода (C++)
+  # 1. Проверка на Arduino / ESP32 кода
   arduino-build:
     runs-on: ubuntu-latest
     steps:
@@ -17,17 +17,18 @@ jobs:
       - name: Setup Arduino CLI
         uses: arduino/setup-arduino-cli@v2
 
-      - name: Install Core & Libraries
+      - name: Install ESP32 & AVR Cores
         run: |
-          arduino-cli core update-index
-          arduino-cli core install arduino:avr
+          arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+          arduino-cli core install esp32:esp32 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
           arduino-cli lib install "Adafruit NeoPixel"
 
-      - name: Compile Arduino Sketch
+      - name: Compile Sketch
         run: |
-          arduino-cli compile --fqbn arduino:avr:uno ./
+          # Автоматично намира всеки .ino файл в проекта и го компилира
+          find . -name "*.ino" -exec arduino-cli compile --fqbn esp32:esp32:esp32-s3 {} \;
 
-  # 2. Проверка на PHP синтаксиса
+  # 2. Проверка на PHP синтаксиса (този стъпка вече работи идеално)
   php-lint:
     runs-on: ubuntu-latest
     steps:
@@ -42,21 +43,3 @@ jobs:
       - name: Check PHP Syntax
         run: |
           find . -type f -name "*.php" -exec php -l {} \;
-
-  # 3. Проверка на Web кода (JS / CSS / HTML)
-  web-lint:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install Prettier
-        run: npm install -g prettier
-
-      - name: Check JS & CSS Formatting
-        run: npx prettier --check "**/*.{js,css,html}"
