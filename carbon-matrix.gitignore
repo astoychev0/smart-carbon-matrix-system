@@ -1,0 +1,18 @@
+# Конфигурационни файлове и пароли (КРИТИЧНО)
+config.php
+credentials.h
+.env
+*.secrets
+
+# Временни и компилирани файлове (Arduino / ESP32)
+*.bin
+*.elf
+*.hex
+/build/
+.pio/
+
+# Системни и редакторски файлове
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
